@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="errata_files/style.css">
+
+  <title>dc.js - Errata</title>
+</head>
+<body>
+  <header>
+    <h1>Errata</h1>
+    <nav><a href="http://localhost:8000/index.html">dc</a></nav>
+  </header>
+  <ul>
+    <li>
+      Array registers and the `:` and `;` commands have not yet been
+      implemented. They will be added ASAP.
+    </li><li>
+      The commands `q` and `Q` were not implemented because I did not see
+      the usefulness of "quitting" the interpreter in the absence of a shell
+      to return control to. However, these commands can be useful in macros so
+      I may implement them eventually.
+    </li><li>
+      The original dc provides arbitrary-precision arithmetic. This
+      implementation currently relies on JavaScript's fixed-precision
+      Number primitives for arithmetic. I'd like to fix this at some point,
+      but it's not a priority.
+    </li><li>
+      Commands that interact with the shell such as `!`, `?`, and `e` have not
+      and likely will not be implemented.
+    </li>
+  </ul>
+</body>
+</html>

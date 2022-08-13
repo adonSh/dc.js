@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/style.css">
+
+  <!-- Define an exports object so the Node.js module exports don't cause an error -->
+  <script>const exports = {};</script>
+  <script src="/dc.js"></script>
+  <script src="/html_interface.js"></script>
+
+  <title>dc.js</title>
+</head>
+<body>
+  <header>
+    <h1>dc</h1>
+    <nav>
+      <a href="/about.html">What is this?</a>
+    </nav>
+  </header>
+  <button id="clear">Clear the display</button>
+  <div id="display"></div>
+  <input id="entry" type="text">
+
+  <script>
+    const dc = new Calculator(new HtmlOutput(document.getElementById('display')));
+    const clear = document.getElementById('clear');
+
+    clear.addEventListener('click', (evt) => { dc.display.clear(); });
+    registerInputEvents(dc, document.getElementById('entry'));
+  </script>
+</body>
+</html>
