@@ -11,7 +11,7 @@ function ScaledNum(n=0) {
 //// Static methods ////
 
 ScaledNum.scaleOf = function(n) {
-  const pieces = n.toString().split('.');
+  const pieces = n.toString(10).split('.');
 
   if (pieces.length < 2)
     return 0;
@@ -22,7 +22,7 @@ ScaledNum.scaleOf = function(n) {
 //// Instance methods ////
 
 ScaledNum.prototype.setScale = function(scale) {
-  const pieces = this.value.toString().split('.');
+  const pieces = this.value.toString(10).split('.');
 
   if (pieces.length > 1 && scale > 0) {
     this.value = Number(pieces[0] + '.' + pieces[1].slice(0, scale));
@@ -180,18 +180,23 @@ Calculator.prototype.push = function(val) {
 //// Program interpreter functions //// 
 
 Calculator.prototype.warn = function(msg) {
-  this.display.append(`dc: ${msg}`);
+  this.display.write(`dc: ${msg}`);
 }
 
 Calculator.prototype.readCh = function() {
   if (this.pos >= this.src.length) {
     this.lastchar = null;
   } else {
-    this.lastchar = this.src[this.pos];
-    this.pos++;
+    this.lastchar = this.src[this.pos++];
   }
 
   return this.lastchar;
+}
+
+// Cannot unread once the program has terminated
+Calculator.prototype.unreadCh = function() {
+  if (this.pos > 0 && this.lastchar != null)
+    this.lastchar = this.src[--this.pos];
 }
 
 Calculator.prototype.eval = function(src) {
@@ -286,8 +291,8 @@ Calculator.prototype.popPrintn = function() {
   if (val === null)
     return;
 
-  this.display.append(val);
   this.display.newline = false;
+  this.display.write(val);
 }
 
 Calculator.prototype.popPrint = function() {
@@ -295,8 +300,8 @@ Calculator.prototype.popPrint = function() {
   if (val === null)
     return;
 
-  this.display.append(isNaN(val) ? val : String.fromCharCode(val));
   this.display.newline = false;
+  this.display.write(isNaN(val) ? val : String.fromCharCode(val));
 }
 
 Calculator.prototype.not = function() {
@@ -308,13 +313,14 @@ Calculator.prototype.not = function() {
 }
 
 Calculator.prototype.notCompare = function() {
-  const peek = this.src[this.pos];
+  const peek = this.readCh();
 
   switch (peek) {
   case '<': case '>': case '=':
-    this.compare(this.readCh(), true);
+    this.compare(peek, true);
     break;
   default:
+    this.unreadCh();
     this.warn('! command is not implemented');
     break;
   }
@@ -495,7 +501,7 @@ Calculator.prototype.swap = function() {
 }
 
 Calculator.prototype.dup = function() {
-  if (this.stack.size < 1) {
+  if (this.stack.length < 1) {
     this.warn('stack empty');
     return;
   }
@@ -624,7 +630,7 @@ Calculator.prototype.toASCII = function() {
 
 Calculator.prototype.printStack = function() {
   for (let i = this.stack.length - 1; i >= 0; i--) {
-    this.display.append(this.stack[i].toString(this.obase));
+    this.display.write(this.stack[i].toString(this.obase));
   }
 }
 
@@ -712,31 +718,40 @@ Calculator.prototype.printTOS = function() {
     return;
   }
 
-  this.display.append(this.stack[this.stack.length-1].toString(this.obase));
+  this.display.write(this.stack[this.stack.length-1].toString(this.obase));
+}
+
+function isHexDigit(ch) {
+  const A = 'A'.charCodeAt(0);
+  const F = 'F'.charCodeAt(0);
+
+  return (A <= ch.charCodeAt(0) && ch.charCodeAt(0) <= F);
 }
 
 Calculator.prototype.parseNumber = function() {
-  let n = this.lastchar === '_' ? '-' : this.lastchar;
+  const neg = this.lastchar === '_';
+  let n = neg ? '' : this.lastchar;
   let seenDecimal = n === '.';
 
   for (;;) {
-    const peek = this.src[this.pos];
+    const peek = this.readCh();
+    if (peek === null)
+      break;
+
     if (peek === '.') {
-      if (seenDecimal)
+      if (seenDecimal) {
+        this.unreadCh();
         break;
+      }
       seenDecimal = true;
-    } else if ('A' <= peek && peek <= 'F') {
-      n += this.readCh();
-      continue;
-    } else if (isNaN(peek)) {
-      break;
+    } else if (isNaN(peek) || peek === ' ') {
+      if (!isHexDigit(peek)) {
+        this.unreadCh();
+        break;
+      }
     }
 
-    if (peek === ' ') {
-      break;
-    }
-
-    n += this.readCh();
+    n += peek;
   }
 
   if (n === '-' || n === '.' || n === '-.') {
@@ -751,7 +766,7 @@ Calculator.prototype.parseNumber = function() {
     val += parseInt(pieces[0][i], 16) * scale;
   }
   if (pieces.length < 2) {
-    this.push(new ScaledNum(val));
+    this.push(new ScaledNum(neg ? -val : val));
     return;
   }
   for (let i = 0; i < pieces[1].length; i++) {
@@ -759,7 +774,12 @@ Calculator.prototype.parseNumber = function() {
     val += parseInt(pieces[1][i], 16) * scale;
   }
 
-  const r = new ScaledNum(val);
+  const r = new ScaledNum(neg ? -val : val);
   r.setScale(pieces[1].length);
-  this.push(new ScaledNum(r));
+  this.push(r);
 }
+
+// Module exports for Node.js
+// If using as script in HTML document, define an empty
+// exports object before the <script> tag to avoid errors
+exports.Calculator = Calculator;
