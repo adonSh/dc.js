@@ -460,8 +460,7 @@ Calculator.prototype.pushLine = function() {
     if (ch === '[')
       this.level++;
     if (ch === ']') {
-      this.level--;
-      if (this.level === 0)
+      if (--this.level === 0)
         break;
     }
 
@@ -611,7 +610,7 @@ Calculator.prototype.setScale = function() {
     return;
   }
 
-  if (isNaN(n)) {
+  if (n < 0) {
     this.warn('scale must be a nonnegative number');
     return;
   }
