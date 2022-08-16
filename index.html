@@ -22,13 +22,14 @@
   <button id="clear">Clear the display</button>
   <div id="display"></div>
   <input id="entry" type="text">
+  <button id="submit">↵</button>
 
   <script>
     const dc = new Calculator(new HtmlOutput(document.getElementById('display')));
     const clear = document.getElementById('clear');
 
     clear.addEventListener('click', (evt) => { dc.display.clear(); });
-    registerInputEvents(dc, document.getElementById('entry'));
+    registerInputEvents(dc, document.getElementById('entry'), document.getElementById('submit'));
   </script>
 </body>
 </html>

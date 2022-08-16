@@ -37,15 +37,10 @@ HtmlOutput.prototype.clear = function() {
 
 //// Main Loop ////
 
-function registerInputEvents(dc, input) {
+function registerInputEvents(dc, input, enter) {
   const history = [];
   let   histIdx = 0;
-
-  input.addEventListener('keypress', (evt) => {
-    if (evt.key != 'Enter') {
-      return;
-    }
-
+  const eval = () => {
     // Remember each line
     history.push(input.value);
     histIdx = history.length;
@@ -58,6 +53,16 @@ function registerInputEvents(dc, input) {
 
     // Reset
     input.value = '';
+  }
+
+  input.addEventListener('keypress', (evt) => {
+    if (evt.key != 'Enter') {
+      return;
+    }
+    eval();
+  });
+  enter.addEventListener('click', (evt) => {
+    eval();
   });
 
   // Up/Down arrow keys for browsing history
