@@ -414,22 +414,12 @@ Calculator.prototype.mod = function() {
     return;
   }
 
-  if (this.scale != 0) {
-    this.warn("Implementer's note: I have done my best to mimic dc's odd " +
-              "behavior when computing a remainder with non-zero precision, " +
-              "but it's not perfect. Some results may be inconsistent. " +
-              "Also, if anyone knows why dc computes remainders this way " +
-              "let me know.");
-  }
+  const c = new ScaledNum(b/a);
+  c.setScale(this.scale);
+  const r = new ScaledNum(b - c * a);
+  r.setScale(Math.max(this.scale, a.scale, b.scale));
 
-  const r = new ScaledNum(b/a);
-  r.setScale(this.scale);
-  const s = new ScaledNum(r*a);
-  s.setScale(this.scale);
-  const t = new ScaledNum(b-s);
-  t.setScale(Math.max(a.scale, b.scale, this.scale));
-
-  this.push(t);
+  this.push(r);
 }
 
 Calculator.prototype.loadStack = function() {
