@@ -350,6 +350,7 @@ Calculator.prototype.popPrintn = function() {
 
   this.display.newline = false;
   this.display.write(val);
+  this.display.newline = true;
 }
 
 Calculator.prototype.popPrint = function() {
@@ -359,6 +360,7 @@ Calculator.prototype.popPrint = function() {
 
   this.display.newline = false;
   this.display.write(isNaN(val) ? val : String.fromCharCode(val));
+  this.display.newline = true;
 }
 
 Calculator.prototype.not = function() {

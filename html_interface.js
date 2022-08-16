@@ -12,8 +12,8 @@ function HtmlOutput(elem) {
 }
 
 // If newline is set to false before calling write() then sameP will be true
-// the next time write() is called. At the end of every call, newline is reset
-// to true and sameP is set to newline's complement (before newline is reset).
+// the next time write() is called regardless of the value of newline.
+// (At the end of every call, sameP is set to newline's complement.)
 HtmlOutput.prototype.write = function(txt) {
   const p = this.sameP ? this.elem.lastChild : document.createElement('p');
   const lines = txt.toString().split('\n');
@@ -28,7 +28,6 @@ HtmlOutput.prototype.write = function(txt) {
     this.elem.appendChild(p);
 
   this.sameP = !this.newline;
-  this.newline = true;
 }
 
 HtmlOutput.prototype.clear = function() {
