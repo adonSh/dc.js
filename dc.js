@@ -61,6 +61,7 @@ function Calculator(output) {
   // Storage
   this.stack = [];
   this.registers = {}
+  this.arrays = {}
 
   // The program being read
   this.src = '';
@@ -98,9 +99,8 @@ function Calculator(output) {
     '7' : this.parseNumber.bind(this),
     '8' : this.parseNumber.bind(this),
     '9' : this.parseNumber.bind(this),
-//TODO:
-//  ':' : this.storeArray.bind(this),
-//  ';' : this.loadArray.bind(this),
+    ':' : this.storeArray.bind(this),
+    ';' : this.loadArray.bind(this),
     '<' : this.less.bind(this),
     '=' : this.equal.bind(this),
     '>' : this.greater.bind(this),
@@ -261,9 +261,66 @@ Calculator.prototype.compare = function(type, not) {
 }
 
 Calculator.prototype.loadArray = function() {
+  const reg = this.readCh();
+  const idx = this.pop();
+  if (idx === null)
+    return;
+  if (isNaN(idx)) {
+    this.warn('array index must be a nonnegative integer');
+    return;
+  }
+  if (idx < 0) {
+    this.warn('array index must be a nonnegative integer');
+    return;
+  }
+
+  if (!(reg in this.registers)) {
+    this.registers[reg] = [];
+    this.arrays[reg] = [];
+  }
+
+  const tos = this.arrays[reg].length - 1;
+  if (tos < 0) {
+    this.push(new ScaledNum(0));
+    return;
+  }
+  if (!(idx in this.arrays[reg][tos])) {
+    this.push(new ScaledNum(0));
+    return;
+  }
+
+  this.push(this.arrays[reg][tos][idx]);
 }
 
 Calculator.prototype.storeArray = function() {
+  const reg = this.readCh();
+  const idx = this.pop();
+  if (idx === null)
+    return;
+  if (isNaN(idx)) {
+    this.warn('array index must be a nonnegative integer');
+    return;
+  }
+  if (idx < 0) {
+    this.warn('array index must be a nonnegative integer');
+    return;
+  }
+  const val = this.pop();
+  if (val === null)
+    return;
+
+  if (!(reg in this.registers)) {
+    this.registers[reg] = [];
+    this.arrays[reg] = [];
+  }
+
+  const tos = this.arrays[reg].length - 1;
+  if (tos < 0) {
+    this.arrays[reg].push([]);
+    this.arrays[reg][0][idx] = val;
+    return;
+  }
+  this.arrays[reg][tos][idx] = val;
 }
 
 Calculator.prototype.equal = function() {
@@ -380,6 +437,7 @@ Calculator.prototype.loadStack = function() {
 
   if (!(reg in this.registers)) {
     this.registers[reg] = [];
+    this.arrays[reg] = [];
   }
   if (this.registers[reg].length < 1) {
     if (reg === null) {
@@ -388,9 +446,11 @@ Calculator.prototype.loadStack = function() {
       const oct = reg.charCodeAt(0).toString(8);
       this.warn(`stack register '${reg}' (0${oct}) is empty`);
     }
-  } else {
-    this.push(this.registers[reg].pop());
+    return;
   }
+
+  this.push(this.registers[reg].pop());
+  this.arrays[reg].pop();
 }
 
 Calculator.prototype.storeStack = function() {
@@ -401,8 +461,11 @@ Calculator.prototype.storeStack = function() {
 
   if (!(reg in this.registers)) {
     this.registers[reg] = [];
+    this.arrays[reg] = [];
   }
+
   this.registers[reg].push(val);
+  this.arrays[reg].push([]);
 }
 
 Calculator.prototype.load = function() {
@@ -410,6 +473,7 @@ Calculator.prototype.load = function() {
 
   if (!(reg in this.registers)) {
     this.registers[reg] = [];
+    this.arrays[reg] = [];
   }
 
   const tos = this.registers[reg].length - 1;
@@ -428,9 +492,16 @@ Calculator.prototype.store = function() {
 
   if (!(reg in this.registers)) {
     this.registers[reg] = [val];
+    this.arrays[reg] = [[]];
     return;
   }
+
   const tos = this.registers[reg].length - 1;
+  if (tos < 0) {
+    this.registers[reg][0] = val;
+    return;
+  }
+
   this.registers[reg][tos] = val;
 }
 
