@@ -89,6 +89,8 @@ function Calculator(output) {
     '-' : this.sub.bind(this),
     '.' : this.parseNumber.bind(this),
     '/' : this.div.bind(this),
+    '^' : this.exp.bind(this),
+    '~' : this.divmod.bind(this),
     '0' : this.parseNumber.bind(this),
     '1' : this.parseNumber.bind(this),
     '2' : this.parseNumber.bind(this),
@@ -126,7 +128,6 @@ function Calculator(output) {
     '\n': this.nop.bind(this),
     '\r': this.nop.bind(this),
     '\t': this.nop.bind(this),
-    '^' : this.exp.bind(this),
     '_' : this.parseNumber.bind(this),
     'a' : this.toASCII.bind(this),
     'c' : this.clearStack.bind(this),
@@ -224,6 +225,32 @@ Calculator.prototype.eval = function(src) {
 }
 
 //// Functions for operations and commands ////
+
+Calculator.prototype.divmod = function() {
+  const a = this.popNumber();
+  if (a === null)
+    return;
+  const b = this.popNumber();
+  if (b === null) {
+    this.push(a);
+    return;
+  }
+
+  if (a === 0) {
+    this.warn('divide by zero');
+    this.push(b);
+    this.push(a);
+    return;
+  }
+
+  const rdiv = new ScaledNum(b/a);
+  rdiv.setScale(this.scale);
+  const rmod = new ScaledNum(b - rdiv * a);
+  rmod.setScale(Math.max(this.scale, a.scale, b.scale));
+
+  this.push(rdiv);
+  this.push(rmod);
+}
 
 Calculator.prototype.compare = function(type, not) {
   const reg = this.readCh();
@@ -687,7 +714,7 @@ Calculator.prototype.toASCII = function() {
     return;
   }
 
-  this.push(isNaN(val) ? val : String.fromCharCode(val));
+  this.push(isNaN(val) ? val[0] : String.fromCharCode(val));
 }
 
 Calculator.prototype.printStack = function() {
