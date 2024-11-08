@@ -376,7 +376,7 @@ Calculator.prototype.popPrintn = function() {
     return;
 
   this.display.newline = false;
-  this.display.write(val);
+  this.display.write(val.toString(this.obase));
   this.display.newline = true;
 }
 
